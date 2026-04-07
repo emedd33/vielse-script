@@ -3,8 +3,8 @@ name: Sjekk vielsestider
 on:
   schedule:
     # Kjører hver dag kl. 07:00 og 18:00 norsk tid (05:00 og 16:00 UTC)
-    - cron: '0 5 * * *'
-    - cron: '0 16 * * *'
+    - cron: "0 5 * * *"
+    - cron: "0 16 * * *"
   workflow_dispatch: # Kan også kjøres manuelt fra GitHub
 
 jobs:
@@ -15,7 +15,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Installer avhengigheter
         run: pip install requests python-dotenv
@@ -25,5 +25,5 @@ jobs:
           VIELSE_EMAIL_FROM: ${{ secrets.VIELSE_EMAIL_FROM }}
           VIELSE_EMAIL_PASSWORD: ${{ secrets.VIELSE_EMAIL_PASSWORD }}
           VIELSE_SMTP_SERVER: smtp.gmail.com
-          VIELSE_SMTP_PORT: '465'
+          VIELSE_SMTP_PORT: "465"
         run: python main.py
