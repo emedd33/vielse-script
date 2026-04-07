@@ -20,7 +20,8 @@ load_dotenv()  # Les .env-fil i samme mappe
 
 API_URL = "https://api.booking.oslo.kommune.no/api/schedule"
 ASSET_ID = "c641abdd-6352-477b-8d34-d5b299922330"
-END_DATE = date(2026, 6, 27)
+START_DATE = date(2026, 4, 7)  # Kun tider etter 17. mai
+END_DATE = date(2026, 6, 20)
 
 # ── Email config ─────────────────────────────────────────
 # Set these as environment variables, or edit directly here.
@@ -47,10 +48,6 @@ HEADERS = {
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/146.0.0.0 Safari/537.36"
-    ),
-    "x-frontend-version": (
-        "SHA: d1b584de4c602716d719e442f9fba36519e9e268 "
-        "refName: main runId: 24079961445 runNumber: 852"
     ),
 }
 
@@ -85,10 +82,12 @@ def fetch_week(from_date: date, to_date: date) -> dict:
 def check_availability():
     """Check all weeks from today until END_DATE and report available slots."""
     today = date.today()
-    current_monday = get_week_start(today)
     available_slots: list[tuple[str, str, str]] = []  # (date, time, weekday)
 
-    print(f"🔍 Sjekker ledige vielsestider fra {today} til {END_DATE} ...\n")
+    search_from = max(today, START_DATE)
+    current_monday = get_week_start(search_from)
+
+    print(f"🔍 Sjekker ledige vielsestider fra {search_from} til {END_DATE} ...\n")
 
     while current_monday <= END_DATE:
         week_sunday = current_monday + timedelta(days=6)
@@ -109,7 +108,7 @@ def check_availability():
 
         for date_str, slots in sorted(timeslots_by_date.items()):
             slot_date = date.fromisoformat(date_str)
-            if slot_date < today or slot_date > END_DATE:
+            if slot_date < search_from or slot_date > END_DATE:
                 continue
             weekday = WEEKDAY_NAMES[slot_date.weekday()]
             for slot in slots:
