@@ -61,6 +61,24 @@ WEEKDAY_NAMES = {
     6: "søndag",
 }
 
+MONTH_NAMES = {
+    1: "Januar", 2: "Februar", 3: "Mars", 4: "April",
+    5: "Mai", 6: "Juni", 7: "Juli", 8: "August",
+    9: "September", 10: "Oktober", 11: "November", 12: "Desember",
+}
+
+
+def format_slot(date_str: str, time_str: str, weekday: str) -> str:
+    """Format a slot as e.g. 'Onsdag 6. Mai, 11:45'."""
+    d = date.fromisoformat(date_str)
+    month = MONTH_NAMES[d.month]
+    return f"{weekday.capitalize()} {d.day}. {month}, {time_str}"
+
+
+def fmt_date(d: date) -> str:
+    """Format date as DD-MM-YYYY."""
+    return d.strftime("%d-%m-%Y")
+
 
 def get_week_start(d: date) -> date:
     """Return Monday of the week containing date d."""
@@ -87,14 +105,14 @@ def check_availability():
     search_from = max(today, START_DATE)
     current_monday = get_week_start(search_from)
 
-    print(f"🔍 Sjekker ledige vielsestider fra {search_from} til {END_DATE} ...\n")
+    print(f"🔍 Sjekker ledige vielsestider fra {fmt_date(search_from)} til {fmt_date(END_DATE)} ...\n")
 
     while current_monday <= END_DATE:
         week_sunday = current_monday + timedelta(days=6)
         # Clamp to END_DATE so we don't fetch beyond what we care about
         fetch_end = min(week_sunday, END_DATE)
 
-        print(f"  Henter uke {current_monday} → {fetch_end} ... ", end="", flush=True)
+        print(f"  Henter uke {fmt_date(current_monday)} → {fmt_date(fetch_end)} ... ", end="", flush=True)
 
         try:
             data = fetch_week(current_monday, fetch_end)
@@ -128,12 +146,10 @@ def check_availability():
     print("\n" + "=" * 55)
     if available_slots:
         print(f"🎉 Fant {len(available_slots)} ledig(e) tid(er)!\n")
-        print(f"  {'Dato':<14} {'Dag':<10} {'Klokkeslett'}")
-        print(f"  {'-'*14} {'-'*10} {'-'*11}")
         for date_str, time_str, weekday in available_slots:
-            print(f"  {date_str:<14} {weekday:<10} {time_str}")
+            print(f"  {format_slot(date_str, time_str, weekday)}")
         print(
-            f"\n👉 Gå til https://booking.oslo.kommune.no for å booke!"
+            f"\n👉 Gå til https://booking.oslo.kommune.no/ressurs?ressurs=c641abdd-6352-477b-8d34-d5b299922330 for å booke!"
         )
     else:
         print("😔 Ingen ledige tider funnet frem til", END_DATE)
@@ -145,27 +161,25 @@ def check_availability():
 
 def build_email_body(slots: list[tuple[str, str, str]]) -> tuple[str, str]:
     """Build plain-text and HTML email bodies from available slots."""
-    booking_url = "https://booking.oslo.kommune.no"
+    booking_url = "https://booking.oslo.kommune.no/ressurs?ressurs=c641abdd-6352-477b-8d34-d5b299922330"
 
     # ── Plain text ───────────────────────────────────────
     lines = [f"Hei!\n\nDet er {len(slots)} ledig(e) vielsestid(er):\n"]
-    lines.append(f"  {'Dato':<14} {'Dag':<10} {'Klokkeslett'}")
-    lines.append(f"  {'-'*14} {'-'*10} {'-'*11}")
     for d, t, w in slots:
-        lines.append(f"  {d:<14} {w:<10} {t}")
+        lines.append(f"  {format_slot(d, t, w)}")
     lines.append(f"\nBook her: {booking_url}")
     text_body = "\n".join(lines)
 
     # ── HTML ─────────────────────────────────────────────
     rows = "".join(
-        f"<tr><td>{d}</td><td>{w}</td><td>{t}</td></tr>" for d, t, w in slots
+        f"<tr><td>{format_slot(d, t, w)}</td></tr>" for d, t, w in slots
     )
     html_body = f"""\
 <html><body>
 <h2>🎉 {len(slots)} ledig(e) vielsestid(er) funnet!</h2>
 <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
   <tr style="background:#f0f0f0;">
-    <th>Dato</th><th>Dag</th><th>Klokkeslett</th>
+    <th>Ledig tid</th>
   </tr>
   {rows}
 </table>
