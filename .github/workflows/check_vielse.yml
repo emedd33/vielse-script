@@ -2,9 +2,8 @@ name: Sjekk vielsestider
 
 on:
   schedule:
-    # Kjører hver dag kl. 07:00 og 21:00 norsk tid (05:00 og 19:00 UTC)
-    - cron: "0 5 * * *"
-    - cron: "0 19 * * *"
+    # Kjører kl. 22:15 norsk tid (20:15 UTC) for testing
+    - cron: "15 20 * * *"
   workflow_dispatch: # Kan også kjøres manuelt fra GitHub
 
 jobs:
